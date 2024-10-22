@@ -1,4 +1,3 @@
-<!-- adopt -->
 <?php
 $servername = "localhost";
 $username = "root";
@@ -15,11 +14,24 @@ if ($conn->connect_error) {
 
 $id = $_GET['id'];
 
+// Consulta para obter os detalhes do animal
 $sql = "SELECT * FROM animals WHERE id=$id";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
+    
+    // Consulta para obter o nome do usuário
+    $userId = $row['user_id']; // Assumindo que user_id é o ID do usuário
+    $userSql = "SELECT name FROM users WHERE id=$userId";
+    $userResult = $conn->query($userSql);
+    
+    if ($userResult->num_rows > 0) {
+        $userRow = $userResult->fetch_assoc();
+        $userName = $userRow['name']; // Obter o nome do usuário
+    } else {
+        $userName = "Usuário desconhecido"; // Caso o usuário não seja encontrado
+    }
 } else {
     echo "Animal não encontrado.";
     exit;
@@ -57,96 +69,245 @@ $conn->close();
     <!-- <link rel="stylesheet" href="css/responsive.css"> -->
     <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
 </head>
+<style>
+  :root {
+    --purple: #ff3500;
+    --yellow: #ffd033;
+    --light-purple: #f3e6f5;
+  }
 
+  .breadcrumb {
+    padding: 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb a {
+    color: var(--purple);
+    text-decoration: none;
+  }
+
+  .animal-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 2rem 0;
+    /* box-shadow: 0 2px 10px rgba(0,0,0,0.05); */
+  }
+
+  .animal-image-container {
+    position: relative;
+    padding: 1rem;
+  }
+
+  .animal-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 15px;
+  }
+
+  .animal-header h1 {
+    font-size: 2.5rem;
+    color: var(--purple);
+    margin-bottom: 1.5rem;
+  }
+
+  .animal-badges {
+    background: var(--purple);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .animal-badge {
+    color: white;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem 0;
+    display: block;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .animal-info {
+    padding: 1rem;
+  }
+
+  .animal-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .metadata-item {
+    background: var(--light-purple);
+    color: var(--purple);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+  }
+
+  .location {
+    margin: 1rem 0;
+    color: var(--purple);
+  }
+
+  .animal-info-header {
+    color: var(--purple);
+    font-size: 1.5rem;
+    margin: 2rem 0 1rem;
+    font-weight: bold;
+  }
+
+  .adoption-criteria {
+    margin: 1.5rem 0;
+  }
+
+  .criteria-item {
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .criteria-item::before {
+    content: "🐾";
+    color: var(--purple);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .tag {
+    background: var(--light-purple);
+    color: var(--purple);
+    padding: 0.5rem 1rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 0.5rem;
+  }
+
+  .btn-primary {
+    background: var(--purple);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+
+  .action-buttons {
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  .page-views {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .animal-image-container, .animal-info {
+      padding: 0;
+    }
+  }
+</style>
 <body>
-    <header>
-        <div class="header-area ">
-            <div id="sticky-header" class="main-header-area">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-xl-3 col-lg-3">
-                            <div class="logo">
-                                <a href="index.php">
-                                    <img src="img/logo_1.png" alt="">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-xl-9 col-lg-9">
-                            <div class="main-menu  d-none d-lg-block">
-                                <nav>
-                                    <ul id="navigation">
-                                        <li><a href="index.php">home</a></li>
-                                        <li><a href="about.php">sobre</a></li>
-                                        <!-- <li><a href="#">blog <i class="ti-angle-down"></i></a>
-                                            <ul class="submenu">
-                                                <li><a href="blog.html">blog</a></li>
-                                                <li><a href="single-blog.html">single-blog</a></li>
-                                            </ul>
-                                        </li> -->
-
-                                        <li><a href="todos_animais.php">todos animais</a></li>
-                                        <li><a href="service.php">Serviços</a></li>
-                                        <li><a href="contato.php">Contato</a></li>
-                                        <li><a href="admin.php">Painel Admin</a></li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <?php include 'navbar.php'; ?>
 
     <div class="container">
-        <div class="row justify-content-center ">
-            <div class="col-lg-7 col-md-10">
-                <div class="section_title text-center mb-95">
-                    <div class="section_title text-center mb-95">
-                        <div class="section_title text-center mb-95">
-                            <h1>Detalhes do Animal</h1>
-                        </div>
+        <div class="animal-container">
+            <div class="row">
+                <!-- Coluna da Imagem -->
+                <div class="col-md-6">
+                    <div class="animal-image-container">
+                        <img src="<?php echo $row['image']; ?>" alt="<?php echo $row['name']; ?>" class="animal-image">
                     </div>
-                    <div class="row justify-content-center">
-                        <div class="col-lg-7 col-md-10">
-                            <div class="section_title text-center mb-95">
-                                <div class=""></div>
-                                <div class="container">
-                                    <div class="row align-items-center">
-                                        <img src="<?php echo $row['image']; ?>" alt="Imagem do Animal" class="img-fluid">
+                </div>
 
-                                    </div>
-                                    <div class="container">
-                                        <div class="row justify-content-center">
-
-                                        </div>
-                                        <h2 class="nome-animal"><?php echo $row['name']; ?></h2>
-                                        <p>Espécie: <?php echo $row['species']; ?></p>
-                                        <p>Raça: <?php echo $row['breed']; ?></p>
-                                        <p>Idade: <?php echo $row['age']; ?> anos</p>
-                                        <p>Sexo: <?php echo $row['sex']; ?></p>
-                                        <p>Descrição: <?php echo $row['description']; ?></p>
-                                        <p>Localização: <?php echo $row['location']; ?></p>
-                                        <p>Contato: <?php echo $row['contact_info']; ?></p>
-                                        <a href="contact.php?id=<?php echo $row['id']; ?>" class="genric-btn success circle">Quero Adotar</a>
-                                        <a href="https://api.whatsapp.com/send?text=Adote%20o%20animal%20<?php echo $row['name']; ?>%20em%20<?php echo $row['location']; ?>" class="genric-btn link">Compartilhar no WhatsApp</a>
-                                    </div>
-
-                                </div>
-                            </div>
+                <!-- Coluna das Informações -->
+                <div class="col-md-6">
+                    <div class="animal-info">
+                        <div class="animal-header">
+                            <h1><?php echo $row['name']; ?></h1>
                         </div>
 
+                        <div class="animal-metadata">
+                            <span class="metadata-item">
+                                <i class="fa fa-paw"></i> <?php echo $row['species']; ?>
+                            </span>
+                            <span class="metadata-item">
+                                <i class="fa fa-venus-mars"></i> <?php echo $row['sex']; ?>
+                            </span>
+                            <span class="metadata-item">
+                                <i class="fa fa-heartbeat"></i> <?php echo $row['breed']; ?>
+                            </span>
+                        </div>
+
+                        <div class="animal-badges">
+                            <div class="animal-badge"><?php echo $row['age']; ?> ANO<?php echo $row['age'] > 1 ? 'S' : ''; ?></div>
+                            <div class="animal-badge">CASTRAD<?php echo $row['sex'] == 'Fêmea' ? 'A' : 'O'; ?></div>
+                            <div class="animal-badge">VERMIFUGAD<?php echo $row['sex'] == 'Fêmea' ? 'A' : 'O'; ?></div>
+                            <div class="animal-badge">VACINAD<?php echo $row['sex'] == 'Fêmea' ? 'A' : 'O'; ?></div>
+                        </div>
+
+                        <div class="location">
+                            📍 Está em <?php echo $row['location']; ?>
+                        </div>
+                        <div class="published-by">
+                            <p>
+                                🧑 Publicado por: <strong><?php echo $userName; ?></strong>
+                            </p>
+                        </div>
+
+                        <div class="animal-description">
+                            <h2 class="animal-info-header">Mais sobre <?php echo $row['name']; ?></h2>
+                            <p><?php echo $row['description']; ?></p>
+                        </div>
+
+                        <div class="adoption-criteria">
+                            <h2 class="animal-info-header">Critérios para adoção</h2>
+                            <div class="criteria-item">Maior de 21 anos</div>
+                            <div class="criteria-item">Obrigatório responder questionário e participar de entrevista</div>
+                            <div class="criteria-item">IMPORTANTE: Processo somente por WhatsApp <?php echo $row['contact_info']; ?></div>
+                            <div class="criteria-item">Adoção com Termo de Responsabilidade</div>
+                            <div class="criteria-item">Se aplica taxa de adoção</div>
+                            <div class="criteria-item">Apresentar Comprovante de endereço e documento de identidade</div>
+                        </div>
+
+                        <div class="tags">
+                            <span class="tag">Dócil</span>
+                            <span class="tag">Brincalhão</span>
+                            <span class="tag">Castrado</span>
+                            <span class="tag">Vacinado</span>
+                            <span class="tag">Vermifugado</span>
+                        </div>
+
+                        <div class="action-buttons">
+                            <a href="contact.php?id=<?php echo $row['id']; ?>" class="btn btn-primary">Quero adotar</a>
+                        </div>
                     </div>
-
-
                 </div>
             </div>
         </div>
-
-
     </div>
     <footer class="footer">
         <div class="footer_top">

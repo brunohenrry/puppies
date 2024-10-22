@@ -21,20 +21,19 @@ class Database {
 
         if (!empty($search)) {
             $sql .= " AND (name LIKE '%$search%' OR location LIKE '%$search%')";
-        } else {
-            // Caso o campo de busca (nome do animal) não seja preenchido, aplicar os demais filtros se estiverem preenchidos
-            if (!empty($species_filter)) {
-                $sql .= " AND species = '$species_filter'";
-            }
-            if (!empty($sex_filter)) {
-                $sql .= " AND sex = '$sex_filter'";
-            }
-            if (!empty($breed_filter)) {
-                $sql .= " AND breed = '$breed_filter'";
-            }
-            if (!empty($age_filter)) {
-                $sql .= " AND age = $age_filter";
-            }
+        }
+
+        if (!empty($species_filter)) {
+            $sql .= " AND species = '$species_filter'";
+        }
+        if (!empty($sex_filter)) {
+            $sql .= " AND sex = '$sex_filter'";
+        }
+        if (!empty($breed_filter)) {
+            $sql .= " AND breed LIKE '%$breed_filter%'";
+        }
+        if (!empty($age_filter)) {
+            $sql .= " AND age = $age_filter";
         }
 
         $result = $this->conn->query($sql);
@@ -84,40 +83,9 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
     <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <header>
-        <div class="header-area">
-            <div id="sticky-header" class="main-header-area">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-xl-3 col-lg-3">
-                            <div class="logo">
-                                <a href="index.php">
-                                    <img src="img/logo_1.png" alt="">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-xl-9 col-lg-9">
-                            <div class="main-menu d-none d-lg-block">
-                                <nav>
-                                    <ul id="navigation">
-                                        <li><a href="index.php">Home</a></li>
-                                        <li><a href="about.php">Sobre</a></li>
-                                        <li><a href="todos_animais.php">Todos Animais</a></li>
-                                        <li><a href="service.php">Serviços</a></li>
-                                        <li><a href="contato.php">Contato</a></li>
-                                        <li><a href="admin.php">Painel Admin</a></li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+<?php
+include('navbar.php');
+?>
 
     <div class="slider_area">
         <div class="single_slider slider_bg_1 d-flex align-items-center">
@@ -152,7 +120,7 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                 <form method="get" action="adopt.php" class="mb-5">
                     <div class="row">
                         <div class="col-md-4">
-                            <input type="text" name="search" class="form-control" placeholder="Nome do Animal" value="<?php echo $search; ?>">
+                            <input type="text" name="search" class="form-control" placeholder="Nome do Animal" value="<?php echo htmlspecialchars($search); ?>">
                         </div>
                         <div class="col-md-2">
                             <select name="species" class="form-control">
@@ -162,10 +130,10 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="text" name="breed" class="form-control" placeholder="Raça" value="<?php echo $breed_filter; ?>">
+                            <input type="text" name="breed" class="form-control" placeholder="Raça" value="<?php echo htmlspecialchars($breed_filter); ?>">
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="age" class="form-control" placeholder="Idade" value="<?php echo $age_filter; ?>">
+                            <input type="number" name="age" class="form-control" placeholder="Idade" value="<?php echo htmlspecialchars($age_filter); ?>">
                         </div>
                         <div class="col-md-2">
                             <select name="sex" class="form-control">
@@ -190,13 +158,13 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                         echo '<div class="single_service">';
                         echo '<div class="service_thumb service_icon_bg_1 d-flex align-items-center justify-content-center">';
                         echo '<div class="service_icon">';
-                        echo '<img src="' . $row["image"] . '" alt="">';
+                        echo '<img src="' . htmlspecialchars($row["image"]) . '" alt="">';
                         echo '</div>';
                         echo '</div>';
                         echo '<div class="service_content text-center">';
-                        echo '<h3 class="nome-animal">' . $row["name"] . '</h3>';
-                        echo '<p class="cidade">' . $row["location"] . '<span>📍</span></p>';
-                        echo '<a href="adopt.php?id=' . $row["id"] . '" class="boxed-btn5">Quero Adotar </a>';
+                        echo '<h3 class="nome-animal">' . htmlspecialchars($row["name"]) . '</h3>';
+                        echo '<p class="cidade">' . htmlspecialchars($row["location"]) . '<span>📍</span></p>';
+                        echo '<a href="adopt.php?id=' . htmlspecialchars($row["id"]) . '" class="boxed-btn5">Quero Adotar </a>';
                         echo '</div>';
                         echo '</div>';
                         echo '</div>';
@@ -204,7 +172,7 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                 } else {
                     echo "<div class='col-md-12 text-center'><p>Nenhum animal encontrado.</p></div>";
                 }
-                $conn->close();
+                $db->closeConnection(); // Fechar a conexão
                 ?>
             </div>
         </div>
@@ -226,88 +194,57 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                     </div>
                     <div class="col-xl-3 col-md-6 col-lg-3">
                         <div class="footer_widget">
-                            <h3 class="footer_title">Nossos Serviços</h3>
-                            <ul class="links">
-                                <li><a href="#">Seguro para Animais de Estimação</a></li>
-                                <li><a href="#">Cirurgias para Animais</a></li>
-                                <li><a href="#">Adoção de Animais</a></li>
-                                <li><a href="#">Seguro para Cães</a></li>
-                                <li><a href="#">Seguro para Gatos</a></li>
+                            <h3 class="footer_title">Informações</h3>
+                            <ul>
+                                <li><a href="#">Sobre Nós</a></li>
+                                <li><a href="#">Serviços</a></li>
+                                <li><a href="#">Contato</a></li>
                             </ul>
                         </div>
                     </div>
                     <div class="col-xl-3 col-md-6 col-lg-3">
                         <div class="footer_widget">
                             <h3 class="footer_title">Links Rápidos</h3>
-                            <ul class="links">
-                                <li><a href="#">Sobre Nós</a></li>
-                                <li><a href="#">Política de Privacidade</a></li>
-                                <li><a href="#">Termos de Serviço</a></li>
-                                <li><a href="#">Informações de Login</a></li>
-                                <li><a href="#">Base de Conhecimento</a></li>
+                            <ul>
+                                <li><a href="#">Adote Um Animal</a></li>
+                                <li><a href="#">Nossos Serviços</a></li>
+                                <li><a href="#">Doações</a></li>
                             </ul>
                         </div>
                     </div>
                     <div class="col-xl-3 col-md-6 col-lg-3">
                         <div class="footer_widget">
-                            <div class="footer_logo">
-                                <a href="#">
-                                    <img src="img/logo_1.png" alt="Logo">
-                                </a>
-                            </div>
-                            <p class="address_text">239 E 5th St, Barretos
-                                BR 00000, SP
-                            </p>
-                            <div class="socail_links">
-                                <ul>
-                                    <li><a href="#"><i class="ti-facebook"></i></a></li>
-                                    <li><a href="#"><i class="ti-pinterest"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-google-plus"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
-                                </ul>
-                            </div>
+                            <h3 class="footer_title">Redes Sociais</h3>
+                            <ul class="social_links">
+                                <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+                                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                                <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+                                <li><a href="#"><i class="fa fa-pinterest"></i></a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="copy-right_text">
+        <div class="footer_bottom">
             <div class="container">
-                <div class="bordered_1px"></div>
-                <div class="row">
-                    <div class="col-xl-12">
-                        <p class="copy_right text-center">
-                            Direitos Autorais &copy;
-                            <script>
-                                document.write(new Date().getFullYear());
-                            </script> Todos os direitos reservados | Este template é feito com <i class="ti-heart" aria-hidden="true"></i> por <a href="https://UNIFEB.com" target="_blank">UNIFEB</a>
-                        </p>
+                <div class="row align-items-center">
+                    <div class="col-lg-12">
+                        <p class="footer-text">© 2023 Todos os direitos reservados | Design por <a href="#">YourName</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script src="js/vendor/modernizr-3.5.0.min.js"></script>
-    <script src="js/vendor/jquery-1.12.4.min.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/isotope.pkgd.min.js"></script>
-    <script src="js/ajax-form.js"></script>
-    <script src="js/waypoints.min.js"></script>
-    <script src="js/jquery.counterup.min.js"></script>
-    <script src="js/imagesloaded.pkgd.min.js"></script>
-    <script src="js/scrollIt.js"></script>
-    <script src="js/jquery.scrollUp.min.js"></script>
-    <script src="js/wow.min.js"></script>
-    <script src="js/nice-select.min.js"></script>
-    <script src="js/jquery.slicknav.min.js"></script>
+    <script src="js/vendor/jquery-3.5.1.min.js"></script>
+    <script src="js/vendor/bootstrap.bundle.min.js"></script>
+    <script src="js/jquery.ajaxchimp.min.js"></script>
     <script src="js/jquery.magnific-popup.min.js"></script>
-    <script src="js/plugins.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
     <script src="js/gijgo.min.js"></script>
-    <script src="js/slick.min.js"></script>
+    <script src="js/jquery.nice-select.min.js"></script>
+    <script src="js/jquery.slicknav.js"></script>
     <script src="js/main.js"></script>
 </body>
-
 </html>

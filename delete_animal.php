@@ -1,28 +1,22 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "pets_adocao";
+session_start();
+require 'db.php';
 
-// Cria conexão
-$conn = new mysqli($servername, $username, $password, $dbname);
+$user_id = $_SESSION['user_id']; // Obtém o ID do usuário logado
 
-// Verifica conexão
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if (isset($_GET['id'])) {
+    $animal_id = $_GET['id'];
+
+    // Verifica se o animal pertence ao usuário logado
+    $sql = "DELETE FROM animals WHERE id = ? AND user_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $animal_id, $user_id);
+
+    if ($stmt->execute()) {
+        echo "Animal excluído com sucesso!";
+    } else {
+        echo "Você não tem permissão para excluir este animal!";
+    }
+    $stmt->close();
 }
-
-$id = $_GET['id'];
-
-$sql = "DELETE FROM animals WHERE id=$id";
-
-if ($conn->query($sql) === TRUE) {
-    // Exclusão bem-sucedida
-    echo '<script>alert("Animal removido com sucesso!"); window.location.href = "todos_animais.php";</script>';
-} else {
-    // Erro na query SQL
-    echo '<script>alert("Erro ao remover animal: ' . $conn->error . '"); window.location.href = "todos_animais.php";</script>';
-}
-
-$conn->close();
 ?>

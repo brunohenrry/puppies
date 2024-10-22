@@ -1,17 +1,18 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "pets_adocao";
+session_start();
+require_once 'db.php';
 
-// Cria conexão
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verifica conexão
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Verifica se o usuário está logado
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
 }
 
+// Inicializa variáveis para armazenar os dados do formulário
+$name = $species = $breed = $age = $sex = $description = $location = $contact_info = "";
+$error_message = "";
+
+// Processa o formulário ao ser enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
     $species = $_POST['species'];
@@ -21,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $description = $_POST['description'];
     $location = $_POST['location'];
     $contact_info = $_POST['contact_info'];
+    $user_id = $_SESSION['user_id']; // Pega o ID do usuário logado
 
     // Handle file upload
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -40,31 +42,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
                             $image = $target_file;
 
-                            $sql = "INSERT INTO animals (name, species, breed, age, sex, description, image, location, contact_info)
-                                    VALUES ('$name', '$species', '$breed', $age, '$sex', '$description', '$image', '$location', '$contact_info')";
+                            // Insere o animal na tabela com o user_id
+                            $sql = "INSERT INTO animals (name, species, breed, age, sex, description, image, location, contact_info, user_id)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bind_param("ssissssssi", $name, $species, $breed, $age, $sex, $description, $image, $location, $contact_info, $user_id);
 
-                            if ($conn->query($sql) === TRUE) {
+                            if ($stmt->execute()) {
                                 echo "<div class='alert alert-success' role='alert'>Novo animal adicionado com sucesso!</div>";
+                                // Limpa os campos após sucesso
+                                $name = $species = $breed = $age = $sex = $description = $location = $contact_info = "";
                             } else {
-                                echo "<div class='alert alert-danger' role='alert'>Erro: " . $sql . "<br>" . $conn->error . "</div>";
+                                $error_message = "Erro: " . $sql . "<br>" . $conn->error;
                             }
                         } else {
-                            echo "<div class='alert alert-danger' role='alert'>Desculpe, houve um erro ao fazer o upload da sua imagem.</div>";
+                            $error_message = "Erro ao fazer o upload da imagem.";
                         }
                     } else {
-                        echo "<div class='alert alert-danger' role='alert'>Desculpe, apenas arquivos JPG, JPEG, PNG e GIF são permitidos.</div>";
+                        $error_message = "Apenas arquivos JPG, JPEG, PNG e GIF são permitidos.";
                     }
                 } else {
-                    echo "<div class='alert alert-danger' role='alert'>Desculpe, sua imagem é muito grande.</div>";
+                    $error_message = "A imagem é muito grande.";
                 }
             } else {
-                echo "<div class='alert alert-danger' role='alert'>Desculpe, o arquivo já existe.</div>";
+                $error_message = "O arquivo já existe.";
             }
         } else {
-            echo "<div class='alert alert-danger' role='alert'>O arquivo não é uma imagem.</div>";
+            $error_message = "O arquivo não é uma imagem.";
         }
     } else {
-        echo "<div class='alert alert-danger' role='alert'>Nenhuma imagem foi enviada ou ocorreu um erro no upload.</div>";
+        $error_message = "Nenhuma imagem foi enviada ou ocorreu um erro no upload.";
     }
 }
 
@@ -103,74 +110,47 @@ $conn->close();
 
 <body>
 
-    <header>
-        <div class="header-area ">
-            <div id="sticky-header" class="main-header-area">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-xl-3 col-lg-3">
-                            <div class="logo">
-                                <a href="index.php">
-                                    <img src="img/logo_1.png" alt="">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-xl-9 col-lg-9">
-                            <div class="main-menu d-none d-lg-block">
-                                <nav>
-                                    <ul id="navigation">
-                                        <li><a href="index.php">Home</a></li>
-                                        <li><a href="about.php">Sobre</a></li>
-                                        <li><a href="todos_animais.php">Todos Animais</a></li>
-                                        <li><a href="service.php">Serviços</a></li>
-                                        <li><a href="contato.php">Contato</a></li>
-                                        <li class="active"><a href="admin.php">Painel Admin</a></li>
-                                        <li><a href="list_animals.php">Lista de Animais</a></li> <!-- Adicionado este item -->
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+   <!-- Exemplo para admin.php -->
+<?php
+include('navbar.php');
+?>
+
 
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-lg-8 col-md-8">
                 <div class="section-top-border">
                     <h3 class="mb-30">Adicionar Novo Animal</h3>
+                    <?php if ($error_message): ?>
+                        <div class='alert alert-danger' role='alert'><?php echo $error_message; ?></div>
+                    <?php endif; ?>
                     <form class="animal-form" method="post" action="admin.php" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="name">Nome:</label>
-                            <input type="text" name="name" id="name" class="form-control">
+                            <input type="text" name="name" id="name" class="form-control" value="<?php echo htmlspecialchars($name); ?>">
                         </div>
                         <div class="form-group">
                             <label for="species">Espécie:</label>
-                            <input type="text" name="species" id="species" class="form-control">
+                            <input type="text" name="species" id="species" class="form-control" value="<?php echo htmlspecialchars($species); ?>">
                         </div>
                         <div class="form-group">
                             <label for="breed">Raça:</label>
-                            <input type="text" name="breed" id="breed" class="form-control">
+                            <input type="text" name="breed" id="breed" class="form-control" value="<?php echo htmlspecialchars($breed); ?>">
                         </div>
                         <div class="form-group">
                             <label for="age">Idade:</label>
-                            <input type="number" name="age" id="age" class="form-control">
+                            <input type="number" name="age" id="age" class="form-control" value="<?php echo htmlspecialchars($age); ?>">
                         </div>
                         <div class="form-group">
                             <label for="sex">Sexo:</label>
                             <select name="sex" id="sex" class="form-control">
-                                <option value="Masculino">Masculino</option>
-                                <option value="Feminino">Feminino</option>
+                                <option value="Masculino" <?php if ($sex == "Masculino") echo "selected"; ?>>Masculino</option>
+                                <option value="Feminino" <?php if ($sex == "Feminino") echo "selected"; ?>>Feminino</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="description">Descrição:</label>
-                            <textarea name="description" id="description" class="form-control"></textarea>
+                            <textarea name="description" id="description" class="form-control"><?php echo htmlspecialchars($description); ?></textarea>
                         </div>
                         <div class="form-group">
                             <label for="image">Imagem:</label>
@@ -178,11 +158,11 @@ $conn->close();
                         </div>
                         <div class="form-group">
                             <label for="location">Localização:</label>
-                            <input type="text" name="location" id="location" class="form-control">
+                            <input type="text" name="location" id="location" class="form-control" value="<?php echo htmlspecialchars($location); ?>">
                         </div>
                         <div class="form-group">
                             <label for="contact_info">Contato:</label>
-                            <input type="text" name="contact_info" id="contact_info" class="form-control">
+                            <input type="text" name="contact_info" id="contact_info" class="form-control" value="<?php echo htmlspecialchars($contact_info); ?>">
                         </div>
                         <button type="submit" class="btn btn-primary">Adicionar Animal</button>
                     </form>

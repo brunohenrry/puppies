@@ -52,47 +52,9 @@ $result = $conn->query($sql);
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
         <![endif]-->
 
-    <header>
-        <div class="header-area ">
-            <div id="sticky-header" class="main-header-area">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-xl-3 col-lg-3">
-                            <div class="logo">
-                                <a href="index.php">
-                                    <img src="img/logo_1.png" alt="">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-xl-9 col-lg-9">
-                            <div class="main-menu  d-none d-lg-block">
-                                <nav>
-                                    <ul id="navigation">
-                                        <li><a href="index.php">home</a></li>
-                                        <li><a href="about.php">sobre</a></li>
-                                        <!-- <li><a href="#">blog <i class="ti-angle-down"></i></a>
-                                            <ul class="submenu">
-                                                <li><a href="blog.html">blog</a></li>
-                                                <li><a href="single-blog.html">single-blog</a></li>
-                                            </ul>
-                                        </li> -->
-
-                                        <li><a href="todos_animais.php">todos animais</a></li>
-                                        <li><a href="service.php">Serviços</a></li>
-                                        <li><a href="contato.php">Contato</a></li>
-                                        <li><a href="admin.php">Painel Admin</a></li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+        <?php
+include('navbar.php');
+?>
 
     <!-- slider_area_start -->
     <div class="slider_area">
@@ -117,20 +79,21 @@ $result = $conn->query($sql);
 
     <!-- service_area_start  -->
     <div class="service_area">
-        <div class="container">
-            <div class="row justify-content-center ">
-                <div class="col-lg-7 col-md-10">
-                    <div class="section_title text-center mb-95">
-                        <h3>Pets Para Adoção
-                        </h3>
-                        <p>Uma seleção especial de peludinhos que buscam um lar para chamar de seu. </p>
-                    </div>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-10">
+                <div class="section_title text-center mb-95">
+                    <h3>Pets Para Adoção</h3>
+                    <p>Uma seleção especial de peludinhos que buscam um lar para chamar de seu.</p>
                 </div>
             </div>
-            <div class="row justify-content-center">
-                <?php
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
+        </div>
+        <div class="row justify-content-center">
+            <?php
+            $contador = 0; // Inicializa o contador
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($contador < 6) { // Limita a exibição a 6 pets
                         echo '<div class="col-lg-4 col-md-6">';
                         echo '<div class="single_service">';
                         echo '<div class="service_thumb service_icon_bg_1 d-flex align-items-center justify-content-center">';
@@ -145,21 +108,26 @@ $result = $conn->query($sql);
                         echo '</div>';
                         echo '</div>';
                         echo '</div>';
+                        $contador++; // Incrementa o contador
                     }
-                } else {
-                    echo "Nenhum animal encontrado.";
                 }
-                $conn->close();
-                ?>
-            </div>
-            <div class="section_title text-center mb-95">
-                <a href="todos_animais.php">
-                    <h4>Ver todos</h4>
-                </a>
-            </div>
-
+            } else {
+                echo "Nenhum animal encontrado.";
+            }
+            $conn->close();
+            ?>
         </div>
+        <?php
+        // Exibe o botão "Ver mais" apenas se houver mais pets
+        if ($result->num_rows > 6) {
+            echo '<div class="section_title text-center mb-95">';
+            echo '<a href="todos_animais.php" class="boxed-btn5">Ver mais</a>';
+            echo '</div>';
+        }
+        ?>
     </div>
+</div>
+
     <!-- service_area_end -->
 
     <!-- pet_care_area_start  -->

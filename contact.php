@@ -1,4 +1,3 @@
-<!-- contact.php -->
 <?php
 $servername = "localhost";
 $username = "root";
@@ -13,12 +12,19 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$id = $_GET['id'];
+// Verifica se o ID foi passado e é um número
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id = $_GET['id'];
+} else {
+    echo "ID inválido.";
+    exit;
+}
 
 $sql = "SELECT * FROM animals WHERE id=$id";
 $result = $conn->query($sql);
 
-if ($result->num_rows > 0) {
+// Verifica se a consulta retornou resultados
+if ($result && $result->num_rows > 0) {
     $row = $result->fetch_assoc();
 } else {
     echo "Animal não encontrado.";
@@ -56,65 +62,175 @@ $conn->close();
     <link rel="stylesheet" href="css/style.css">
     <!-- <link rel="stylesheet" href="css/responsive.css"> -->
     <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --primary-color: #ff3500;
+            --primary-light: #ff6347;
+            --text-dark: #333;
+            --background-light: #fff5f2;
+        }
+
+        .section_title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section_title h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            font-weight: 600;
+            position: relative;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+        }
+
+
+        .contact-details {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-details h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-details p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .contact-details .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-details .info-item i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .contact-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .contact-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .email-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .phone-btn {
+            background-color: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 53, 0, 0.3);
+        }
+
+        .email-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .phone-btn:hover {
+            background-color: var(--background-light);
+        }
+
+        .pet-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 2rem;
+            border: 5px solid var(--background-light);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .contact-buttons {
+                flex-direction: column;
+            }
+
+            .contact-btn {
+                width: 100%;
+            }
+
+            .section_title h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
-<header>
-        <div class="header-area ">
-            <div id="sticky-header" class="main-header-area">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-xl-3 col-lg-3">
-                            <div class="logo">
-                                <a href="index.php">
-                                    <img src="img/logo_1.png" alt="">
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-xl-9 col-lg-9">
-                            <div class="main-menu  d-none d-lg-block">
-                                <nav>
-                                    <ul id="navigation">
-                                        <li><a href="index.php">home</a></li>
-                                        <li><a href="about.php">sobre</a></li>
-                                        <!-- <li><a href="#">blog <i class="ti-angle-down"></i></a>
-                                            <ul class="submenu">
-                                                <li><a href="blog.html">blog</a></li>
-                                                <li><a href="single-blog.html">single-blog</a></li>
-                                            </ul>
-                                        </li> -->
+<?php include 'navbar.php'; ?>
 
-                                        <li><a href="todos_animais.php">todos animais</a></li>
-                                        <li><a href="service.php">Serviços</a></li>
-                                        <li><a href="contato.php">Contato</a></li>
-                                        <li><a href="admin.php">Painel Admin</a></li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container">
+        <div class="section_title">
+            <h1>Contato para Adoção</h1>
         </div>
-    </header>
-    <div class="container">
-        <div class="row justify-content-center ">
-            <div class="col-lg-6 col-md-10">
-                <div class="section_title text-center mb-95">
-                    <h1>Contato para Adoção</h1>
-                </div>
 
-                <div class="contact-details">
-                    <h2><?php echo $row['name']; ?></h2>
-                    <p>Para adotar o <?php echo $row['name']; ?>, entre em contato com o responsável:</p>
-                    <p>Contato: <?php echo $row['contact_info']; ?></p>
-                    <p>Localização: <?php echo $row['location']; ?></p>
-                    <a href="mailto:<?php echo $row['contact_info']; ?>?subject=Adoção de <?php echo $row['name']; ?>" class="email-btn">Enviar Email</a>
-                    <a href="tel:<?php echo $row['contact_info']; ?>" class="phone-btn">Ligar</a>
-                </div>
+        <div class="contact-details">
+            <img src="<?php echo $row['image']; ?>" alt="<?php echo $row['name']; ?>" class="pet-image">
+            <h2><?php echo $row['name']; ?></h2>
+            
+            <div class="info-item">
+                <i class="ti ti-location-pin"></i>
+                <p><?php echo $row['location']; ?></p>
+            </div>
+            
+            <div class="info-item">
+                <i class="ti ti-user"></i>
+                <p>Responsável pela adoção</p>
+            </div>
+            
+            <div class="info-item">
+                <i class="ti ti-mobile"></i>
+                <p><?php echo $row['contact_info']; ?></p>
+            </div>
+
+            <p>Para adotar o <?php echo $row['name']; ?>, entre em contato com o responsável através de uma das opções abaixo:</p>
+            
+            <div class="contact-buttons">
+                <a href="mailto:<?php echo $row['contact_info']; ?>?subject=Adoção de <?php echo $row['name']; ?>" class="contact-btn email-btn">
+                    <i class="ti ti-email"></i>
+                    Enviar Email
+                </a>
+                <a href="tel:<?php echo $row['contact_info']; ?>" class="contact-btn phone-btn">
+                    <i class="ti ti-mobile"></i>
+                    Ligar Agora
+                </a>
             </div>
         </div>
     </div>
