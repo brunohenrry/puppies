@@ -1,5 +1,6 @@
-<!-- index.php -->
 <?php
+session_start(); // Inicia a sessão
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -12,6 +13,9 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+// Verifica se o usuário está logado
+$isLoggedIn = isset($_SESSION['user_id']); // Verifica se a variável de sessão 'user_id' está definida
 
 $sql = "SELECT * FROM animals";
 $result = $conn->query($sql);
@@ -45,16 +49,111 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="css/style.css">
     <!-- <link rel="stylesheet" href="css/responsive.css"> -->
     <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+<style>
+    .favorite-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+
+    .heart-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn i {
+        font-size: 24px;
+        color: #ccc;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn.active i {
+        color: #ff4d4d;
+    }
+
+    .single_service {
+        position: relative;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.heart-btn').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const petId = this.dataset.petId;
+
+                // Verifica se o usuário está logado
+                if (!<?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>) {
+                    Swal.fire({
+                        title: 'Oops!',
+                        text: 'Você precisa estar logado para favoritar um pet!',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Verifica se o botão já está ativo
+                if (this.classList.contains('active')) {
+                    // Desfavoritar
+                    fetch('unfavorite.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `animal_id=${petId}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.classList.remove('active'); 
+                                this.querySelector('i').style.color = ''; 
+                            } else {
+                                alert(data.message);
+                            }
+                        });
+                } else {
+                    // Favoritar
+                    fetch('favorite.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `animal_id=${petId}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.classList.add('active');
+                                this.querySelector('i').style.color = 'red';
+                            } else {
+                                alert(data.message);
+                            }
+                        });
+                }
+            });
+        });
+    });
+</script>
+
+
+
 
 <body>
     <!--[if lte IE 9]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
         <![endif]-->
 
-        <?php
-include('navbar.php');
-?>
+    <?php
+    include('navbar.php');
+    ?>
 
     <!-- slider_area_start -->
     <div class="slider_area">
@@ -79,54 +178,81 @@ include('navbar.php');
 
     <!-- service_area_start  -->
     <div class="service_area">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-7 col-md-10">
-                <div class="section_title text-center mb-95">
-                    <h3>Pets Para Adoção</h3>
-                    <p>Uma seleção especial de peludinhos que buscam um lar para chamar de seu.</p>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 col-md-10">
+                    <div class="section_title text-center mb-95">
+                        <h3>Pets Para Adoção</h3>
+                        <p>Uma seleção especial de peludinhos que buscam um lar para chamar de seu.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="row justify-content-center">
-            <?php
-            $contador = 0; // Inicializa o contador
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    if ($contador < 6) { // Limita a exibição a 6 pets
-                        echo '<div class="col-lg-4 col-md-6">';
-                        echo '<div class="single_service">';
-                        echo '<div class="service_thumb service_icon_bg_1 d-flex align-items-center justify-content-center">';
-                        echo '<div class="service_icon">';
-                        echo '<img src="' . $row["image"] . '" alt="">';
-                        echo '</div>';
-                        echo '</div>';
-                        echo '<div class="service_content text-center">';
-                        echo '<h3 class="nome-animal">' . $row["name"] . '</h3>';
-                        echo '<p class="cidade">' . $row["location"] . '<span>📍</span></p>';
-                        echo '<a href="adopt.php?id=' . $row["id"] . '" class="boxed-btn5">Quero Adotar </a>';
-                        echo '</div>';
-                        echo '</div>';
-                        echo '</div>';
-                        $contador++; // Incrementa o contador
+            <div class="row justify-content-center">
+                <?php
+                $contador = 0; // Inicializa o contador
+                $favoritos = [];
+
+                // Se o usuário estiver logado, busque os favoritos
+                if (isset($_SESSION['user_id'])) {
+                    $user_id = $_SESSION['user_id'];
+                    $sql_favorites = "SELECT animal_id FROM favorites WHERE user_id = ?";
+                    $stmt_favorites = $conn->prepare($sql_favorites);
+                    $stmt_favorites->bind_param("i", $user_id);
+                    $stmt_favorites->execute();
+                    $result_favorites = $stmt_favorites->get_result();
+
+                    while ($row = $result_favorites->fetch_assoc()) {
+                        $favoritos[] = $row['animal_id'];
                     }
+
+                    $stmt_favorites->close();
                 }
-            } else {
-                echo "Nenhum animal encontrado.";
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        if ($contador < 6) {
+                            echo '<div class="col-lg-4 col-md-6">';
+                            echo '<div class="single_service">';
+
+                            // Adiciona o botão de favorito
+                            echo '<div class="favorite-button">';
+                            echo '<button class="heart-btn' . (in_array($row["id"], $favoritos) ? ' active' : '') . '" data-pet-id="' . $row["id"] . '">';
+                            echo '<i class="fas fa-heart" style="color:' . (in_array($row["id"], $favoritos) ? 'red' : '#e5e7e9') . ';"></i>';
+                            echo '</button>';
+                            echo '</div>';
+
+                            echo '<div class="service_thumb service_icon_bg_1 d-flex align-items-center justify-content-center">';
+                            echo '<div class="service_icon">';
+                            echo '<img src="' . $row["image"] . '" alt="">';
+                            echo '</div>';
+                            echo '</div>';
+                            echo '<div class="service_content text-center">';
+                            echo '<h3 class="nome-animal">' . $row["name"] . '</h3>';
+                            echo '<p class="cidade">' . $row["location"] . '<span>📍</span></p>';
+                            echo '<a href="adopt.php?id=' . $row["id"] . '" class="boxed-btn5">Quero Adotar </a>';
+                            echo '</div>';
+                            echo '</div>';
+                            echo '</div>';
+                            $contador++;
+                        }
+                    }
+                } else {
+                    echo "Nenhum animal encontrado.";
+                }
+                $conn->close();
+                ?>
+            </div>
+            <?php
+            // Exibe o botão "Ver mais" apenas se houver mais pets
+            if ($result->num_rows > 6) {
+                echo '<div class="section_title text-center mb-95">';
+                echo '<a href="todos_animais.php" class="boxed-btn5">Ver mais</a>';
+                echo '</div>';
             }
-            $conn->close();
             ?>
         </div>
-        <?php
-        // Exibe o botão "Ver mais" apenas se houver mais pets
-        if ($result->num_rows > 6) {
-            echo '<div class="section_title text-center mb-95">';
-            echo '<a href="todos_animais.php" class="boxed-btn5">Ver mais</a>';
-            echo '</div>';
-        }
-        ?>
     </div>
-</div>
+
 
     <!-- service_area_end -->
 
@@ -358,7 +484,8 @@ include('navbar.php');
                             Direitos Autorais &copy;
                             <script>
                                 document.write(new Date().getFullYear());
-                            </script> Todos os direitos reservados | Este template é feito com <i class="ti-heart" aria-hidden="true"></i> por <a href="https://UNIFEB.com" target="_blank">UNIFEB</a>
+                            </script> Todos os direitos reservados | Este template é feito com <i class="ti-heart"
+                                aria-hidden="true"></i> por <a href="https://UNIFEB.com" target="_blank">UNIFEB</a>
                         </p>
                     </div>
                 </div>
@@ -418,3 +545,163 @@ include('navbar.php');
 </body>
 
 </html>
+<style>
+    .service_area {
+        padding: 120px 0;
+        background: linear-gradient(to bottom, #fff9f9, #ffffff);
+    }
+
+    /* Título da seção */
+    .section_title h3 {
+        font-size: 42px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        text-transform: none;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section_title h3:after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: #ff6b6b;
+        border-radius: 2px;
+    }
+
+    .section_title p {
+        color: #7f8c8d;
+        font-size: 18px;
+        line-height: 1.6;
+        margin-bottom: 40px;
+    }
+
+    /* Cards dos pets */
+    .single_service {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+    }
+
+    .single_service:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Área da imagem */
+    .service_thumb {
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+    .service_thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .single_service:hover .service_thumb img {
+        transform: scale(1.05);
+    }
+
+    /* Conteúdo do card */
+    .service_content {
+        padding: 25px 20px;
+        text-align: center;
+    }
+
+    .service_content h3 {
+        font-size: 24px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .service_content .cidade {
+        color: #7f8c8d;
+        font-size: 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    /* Botão de adoção */
+    .boxed-btn5 {
+        background: #ff3500;
+        color: #fff;
+        display: inline-block;
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid #ff3500;
+    }
+
+    .boxed-btn5:hover {
+        background: transparent;
+        color: #ff3500;
+    }
+
+    /* Botão de favorito */
+    .favorite-button {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        padding: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .heart-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn i {
+        font-size: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn:hover i {
+        transform: scale(1.1);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .service_area {
+            padding: 80px 0;
+        }
+
+        .section_title h3 {
+            font-size: 32px;
+        }
+
+        .section_title p {
+            font-size: 16px;
+        }
+
+        .service_thumb {
+            height: 240px;
+        }
+    }
+</style>

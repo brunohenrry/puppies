@@ -16,24 +16,30 @@ class Database {
     }
 
     // Método para buscar animais com filtros
-    public function searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter) {
-        $sql = "SELECT * FROM animals WHERE 1";
+    public function searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter, $favorite_filter) {
+        $sql = "SELECT a.* FROM animals a";
+
+        if ($favorite_filter) {
+            $sql .= " JOIN favorites f ON a.id = f.animal_id WHERE f.user_id = $favorite_filter";
+        } else {
+            $sql .= " WHERE 1=1";
+        }
 
         if (!empty($search)) {
-            $sql .= " AND (name LIKE '%$search%' OR location LIKE '%$search%')";
+            $sql .= " AND (a.name LIKE '%$search%' OR a.location LIKE '%$search%')";
         }
 
         if (!empty($species_filter)) {
-            $sql .= " AND species = '$species_filter'";
+            $sql .= " AND a.species = '$species_filter'";
         }
         if (!empty($sex_filter)) {
-            $sql .= " AND sex = '$sex_filter'";
+            $sql .= " AND a.sex = '$sex_filter'";
         }
         if (!empty($breed_filter)) {
-            $sql .= " AND breed LIKE '%$breed_filter%'";
+            $sql .= " AND a.breed LIKE '%$breed_filter%'";
         }
         if (!empty($age_filter)) {
-            $sql .= " AND age = $age_filter";
+            $sql .= " AND a.age = $age_filter";
         }
 
         $result = $this->conn->query($sql);
@@ -55,13 +61,14 @@ $species_filter = isset($_GET['species']) ? $_GET['species'] : "";
 $sex_filter = isset($_GET['sex']) ? $_GET['sex'] : "";
 $breed_filter = isset($_GET['breed']) ? $_GET['breed'] : "";
 $age_filter = isset($_GET['age']) ? $_GET['age'] : "";
+$favorite_filter = isset($_GET['favorites']) ? $_GET['favorites'] : "";
 
 // Realizando a busca de animais com base nos filtros
-$result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter);
+$result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter, $favorite_filter);
 ?>
 
 <!DOCTYPE html>
-<html class="no-js" lang="zxx">
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -83,9 +90,7 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
     <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<?php
-include('navbar.php');
-?>
+<?php include('navbar.php'); ?>
 
     <div class="slider_area">
         <div class="single_slider slider_bg_1 d-flex align-items-center">
@@ -116,8 +121,9 @@ include('navbar.php');
                     </div>
                 </div>
             </div>
+            
             <div class="row justify-content-center">
-                <form method="get" action="adopt.php" class="mb-5">
+                <form method="get" action="todos_animais.php" class="mb-5">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="text" name="search" class="form-control" placeholder="Nome do Animal" value="<?php echo htmlspecialchars($search); ?>">
@@ -145,11 +151,17 @@ include('navbar.php');
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-12 text-center">
+                            <label><input type="checkbox" name="favorites" value="1" <?php if ($favorite_filter) echo 'checked'; ?>> Apenas Favoritos</label>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-center">
                             <button type="submit" class="boxed-btn4">Buscar</button>
                         </div>
                     </div>
                 </form>
             </div>
+            
             <div class="row justify-content-center">
                 <?php
                 if ($result->num_rows > 0) {
@@ -179,58 +191,13 @@ include('navbar.php');
     </div>
 
     <footer class="footer">
-        <div class="footer_top">
-            <div class="container">
-                <div class="row">
-                    <div class="col-xl-3 col-md-6 col-lg-3">
-                        <div class="footer_widget">
-                            <h3 class="footer_title">Contato</h3>
-                            <ul class="address_line">
-                                <li>+555 0000 565</li>
-                                <li><a href="mailto:demomail@gmail.com">puppies@gmail.com</a></li>
-                                <li>700, Green Lane, Barretos, SP</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-lg-3">
-                        <div class="footer_widget">
-                            <h3 class="footer_title">Informações</h3>
-                            <ul>
-                                <li><a href="#">Sobre Nós</a></li>
-                                <li><a href="#">Serviços</a></li>
-                                <li><a href="#">Contato</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-lg-3">
-                        <div class="footer_widget">
-                            <h3 class="footer_title">Links Rápidos</h3>
-                            <ul>
-                                <li><a href="#">Adote Um Animal</a></li>
-                                <li><a href="#">Nossos Serviços</a></li>
-                                <li><a href="#">Doações</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-lg-3">
-                        <div class="footer_widget">
-                            <h3 class="footer_title">Redes Sociais</h3>
-                            <ul class="social_links">
-                                <li><a href="#"><i class="fa fa-facebook"></i></a></li>
-                                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
-                                <li><a href="#"><i class="fa fa-instagram"></i></a></li>
-                                <li><a href="#"><i class="fa fa-pinterest"></i></a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="footer_bottom">
+        <div class="footer_area">
             <div class="container">
                 <div class="row align-items-center">
-                    <div class="col-lg-12">
-                        <p class="footer-text">© 2023 Todos os direitos reservados | Design por <a href="#">YourName</a></p>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="footer_text text-center text-md-left">
+                            <p>&copy; 2024 Todos os direitos reservados | Desenvolvido por <a href="#">Seu Nome</a></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,12 +206,171 @@ include('navbar.php');
 
     <script src="js/vendor/jquery-3.5.1.min.js"></script>
     <script src="js/vendor/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.ajaxchimp.min.js"></script>
-    <script src="js/jquery.magnific-popup.min.js"></script>
     <script src="js/owl.carousel.min.js"></script>
-    <script src="js/gijgo.min.js"></script>
+    <script src="js/jquery.magnific-popup.min.js"></script>
     <script src="js/jquery.nice-select.min.js"></script>
+    <script src="js/gijgo.min.js"></script>
     <script src="js/jquery.slicknav.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
+<style>
+    .service_area {
+        padding: 120px 0;
+        background: linear-gradient(to bottom, #fff9f9, #ffffff);
+    }
+
+    /* Título da seção */
+    .section_title h3 {
+        font-size: 42px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        text-transform: none;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section_title h3:after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: #ff6b6b;
+        border-radius: 2px;
+    }
+
+    .section_title p {
+        color: #7f8c8d;
+        font-size: 18px;
+        line-height: 1.6;
+        margin-bottom: 40px;
+    }
+
+    /* Cards dos pets */
+    .single_service {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+    }
+
+    .single_service:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Área da imagem */
+    .service_thumb {
+        position: relative;
+        height: 280px;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+    .service_thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .single_service:hover .service_thumb img {
+        transform: scale(1.05);
+    }
+
+    /* Conteúdo do card */
+    .service_content {
+        padding: 25px 20px;
+        text-align: center;
+    }
+
+    .service_content h3 {
+        font-size: 24px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .service_content .cidade {
+        color: #7f8c8d;
+        font-size: 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    /* Botão de adoção */
+    .boxed-btn5 {
+        background: #ff3500;
+        color: #fff;
+        display: inline-block;
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid #ff3500;
+    }
+
+    .boxed-btn5:hover {
+        background: transparent;
+        color: #ff3500;
+    }
+
+    /* Botão de favorito */
+    .favorite-button {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        padding: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .heart-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn i {
+        font-size: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn:hover i {
+        transform: scale(1.1);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .service_area {
+            padding: 80px 0;
+        }
+
+        .section_title h3 {
+            font-size: 32px;
+        }
+
+        .section_title p {
+            font-size: 16px;
+        }
+
+        .service_thumb {
+            height: 240px;
+        }
+    }
+</style>
