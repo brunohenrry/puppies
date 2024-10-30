@@ -3,7 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
+<<<<<<< HEAD
+-- Tempo de geração: 20-Out-2024 às 02:50
+=======
 -- Tempo de geração: 25-Out-2024 às 17:17
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 -- Versão do servidor: 8.0.31
 -- versão do PHP: 7.4.33
 
@@ -39,14 +43,26 @@ CREATE TABLE IF NOT EXISTS `animals` (
   `image` varchar(255) NOT NULL,
   `location` varchar(100) NOT NULL,
   `contact_info` varchar(100) NOT NULL,
+<<<<<<< HEAD
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+=======
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 
 --
 -- Extraindo dados da tabela `animals`
 --
 
+<<<<<<< HEAD
+INSERT INTO `animals` (`id`, `name`, `species`, `breed`, `age`, `sex`, `description`, `image`, `location`, `contact_info`) VALUES
+(24, 'Caramelo', 'Salsicha', 'Pastor', 18, '', '123', 'uploads/img4.jpeg', '123', '123'),
+(26, 'Cachorro', 'Aleatoria', 'Beagle', 20, '0', 'Test de descrição 123Test de descrição 123Test de descrição 123', 'uploads/img5.jpeg', 'Colina - São Paulo', '198888'),
+(35, 'Bruno', 'Test', '123', 123, 'Masculino', '123123', 'uploads/250002174688.png', '123', '123123'),
+(32, 'Toddy', 'Basset ', 'PugGolden ', 20, '', '123', 'uploads/img2.jpg', 'Barretos', '1231');
+=======
 INSERT INTO `animals` (`id`, `name`, `species`, `breed`, `age`, `sex`, `description`, `image`, `location`, `contact_info`, `user_id`) VALUES
 (24, 'Caramelo', 'Pardo', 'Pastor', 18, '', '123', 'uploads/img4.jpeg', '123', '123', 0),
 (26, 'Cachorro', 'Aleatoria', 'Beagle', 20, '0', 'Test de descrição 123Test de descrição 123Test de descrição 123', 'uploads/img5.jpeg', 'Colina - São Paulo', '198888', 0),
@@ -84,6 +100,7 @@ INSERT INTO `favorites` (`id`, `user_id`, `animal_id`) VALUES
 (20, 3, 32),
 (39, 2, 37),
 (45, 2, 36);
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 
 -- --------------------------------------------------------
 
@@ -97,6 +114,10 @@ CREATE TABLE IF NOT EXISTS `users` (
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
+<<<<<<< HEAD
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+=======
   `location` varchar(100) NOT NULL,
   `contact_info` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
@@ -110,6 +131,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `location`, `contact
 (1, 'Guilherme', 'gui@gmail.com', '$2y$10$lFr67OcVhJYZJO.cgdyRoO9hvHxddOANGKDBYM21VUEL1veDN5TYq', 'Barretos - SP', '(15) 5555-5555'),
 (2, 'Bruno', 'bruno@gmail.com', '$2y$10$g0eGyrh8oPVFoVcezD01h.b8cZgdYoNpuH17GudXD2p9ezaOLercO', 'Barretos - SP', '(12) 3111-1111'),
 (3, 'Kaio Gabriel', 'kaio@gmail.com', '$2y$10$P9zGYYAGnPkZwO5WhaahlOP7WgQypoWFIe.VsD6.Hj5HwEemPZYF2', 'Barretos - SP', '(12) 31123-1321');
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
