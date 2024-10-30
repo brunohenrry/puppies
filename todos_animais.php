@@ -1,6 +1,9 @@
 <?php
+session_start(); // Inicia a sessão
+
 // Classe para gerenciar a conexão com o banco de dados
-class Database {
+class Database
+{
     private $servername = "localhost";
     private $username = "root";
     private $password = "";
@@ -8,7 +11,8 @@ class Database {
     private $conn;
 
     // Construtor para inicializar a conexão
-    public function __construct() {
+    public function __construct()
+    {
         $this->conn = new mysqli($this->servername, $this->username, $this->password, $this->dbname);
         if ($this->conn->connect_error) {
             die("Connection failed: " . $this->conn->connect_error);
@@ -16,6 +20,18 @@ class Database {
     }
 
     // Método para buscar animais com filtros
+<<<<<<< HEAD
+    public function searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter, $favorite_filter, $user_id = null)
+    {
+        $sql = "SELECT a.* FROM animals a";
+        $params = [];  // Lista para parâmetros
+
+        if ($favorite_filter && $user_id) {
+            $sql .= " JOIN favorites f ON a.id = f.animal_id WHERE f.user_id = ?";
+            $params[] = $user_id;
+        } else {
+            $sql .= " WHERE 1=1";
+=======
     public function searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter, $favorite_filter) {
         $sql = "SELECT a.* FROM animals a";
 
@@ -40,22 +56,54 @@ class Database {
         }
         if (!empty($age_filter)) {
             $sql .= " AND a.age = $age_filter";
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
         }
 
-        $result = $this->conn->query($sql);
+        if (!empty($search)) {
+            $sql .= " AND (a.name LIKE ? OR a.location LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+        if (!empty($species_filter)) {
+            $sql .= " AND a.species = ?";
+            $params[] = $species_filter;
+        }
+        if (!empty($sex_filter)) {
+            $sql .= " AND a.sex = ?";
+            $params[] = $sex_filter;
+        }
+        if (!empty($breed_filter)) {
+            $sql .= " AND a.breed LIKE ?";
+            $params[] = "%$breed_filter%";
+        }
+        if (!empty($age_filter)) {
+            $sql .= " AND a.age = ?";
+            $params[] = $age_filter;
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param(str_repeat("s", count($params)), ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
         return $result;
     }
 
     // Método para fechar a conexão com o banco de dados
-    public function closeConnection() {
+    public function closeConnection()
+    {
         $this->conn->close();
     }
 }
 
-// Instanciando a classe Database para usar seus métodos
+// Verifica se o usuário está logado
+$isLoggedIn = isset($_SESSION['user_id']);
+$user_id = $isLoggedIn ? $_SESSION['user_id'] : null;
+
+// Instancia a classe Database para usar seus métodos
 $db = new Database();
 
-// Inicializando as variáveis com valores padrão
+// Inicializa as variáveis com valores padrão
 $search = isset($_GET['search']) ? $_GET['search'] : "";
 $species_filter = isset($_GET['species']) ? $_GET['species'] : "";
 $sex_filter = isset($_GET['sex']) ? $_GET['sex'] : "";
@@ -63,19 +111,33 @@ $breed_filter = isset($_GET['breed']) ? $_GET['breed'] : "";
 $age_filter = isset($_GET['age']) ? $_GET['age'] : "";
 $favorite_filter = isset($_GET['favorites']) ? $_GET['favorites'] : "";
 
+<<<<<<< HEAD
+// Realiza a busca de animais com base nos filtros, incluindo favoritos se o usuário estiver logado
+$result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter, $favorite_filter, $user_id);
+=======
 // Realizando a busca de animais com base nos filtros
 $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filter, $age_filter, $favorite_filter);
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
+<<<<<<< HEAD
+
+=======
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Todos os Animais</title>
+    <title>Puppies</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- <link rel="manifest" href="site.webmanifest"> -->
     <link rel="shortcut icon" type="image/x-icon" href="img/service/service_icon_1.png">
+    <!-- Place favicon.ico in the root directory -->
+
+    <!-- CSS here -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/owl.carousel.min.css">
     <link rel="stylesheet" href="css/magnific-popup.css">
@@ -87,10 +149,115 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
     <link rel="stylesheet" href="css/animate.css">
     <link rel="stylesheet" href="css/slicknav.css">
     <link rel="stylesheet" href="css/style.css">
+    <!-- <link rel="stylesheet" href="css/responsive.css"> -->
     <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+<style>
+    .favorite-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+
+    .heart-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .heart-btn i {
+        font-size: 24px;
+        color: #ccc;
+        transition: color 0.3s ease;
+    }
+
+    .heart-btn.active i {
+        color: #ff4d4d;
+        /* Cor vermelha quando favoritado */
+    }
+
+    .heart-btn i {
+        color: #ccc;
+        /* Cor padrão */
+    }
+
+
+    .single_service {
+        position: relative;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.heart-btn').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const petId = this.dataset.petId;
+
+                // Verifica se o usuário está logado
+                if (!<?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>) {
+                    Swal.fire({
+                        title: 'Oops!',
+                        text: 'Você precisa estar logado para favoritar um pet!',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                if (this.classList.contains('active')) {
+                    // Desfavoritar
+                    fetch('unfavorite.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `animal_id=${petId}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.classList.remove('active');
+                                this.querySelector('i').style.color = '#ccc'; // Definir cor original
+                            } else {
+                                alert(data.message);
+                            }
+                        });
+                } else {
+                    // Favoritar
+                    fetch('favorite.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `animal_id=${petId}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.classList.add('active');
+                                this.querySelector('i').style.color = '#ff4d4d'; // Definir cor de favorito
+                            } else {
+                                alert(data.message);
+                            }
+                        });
+                }
+            });
+        });
+    });
+
+</script>
+
 <body>
+<<<<<<< HEAD
+    <?php include('navbar.php'); ?>
+=======
 <?php include('navbar.php'); ?>
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
 
     <div class="slider_area">
         <div class="single_slider slider_bg_1 d-flex align-items-center">
@@ -121,37 +288,66 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                     </div>
                 </div>
             </div>
+<<<<<<< HEAD
+
+=======
             
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
             <div class="row justify-content-center">
                 <form method="get" action="todos_animais.php" class="mb-5">
                     <div class="row">
                         <div class="col-md-4">
+<<<<<<< HEAD
+                            <input type="text" name="search" class="form-control" placeholder="Nome do Animal"
+                                value="<?php echo htmlspecialchars($search); ?>">
+=======
                             <input type="text" name="search" class="form-control" placeholder="Nome do Animal" value="<?php echo htmlspecialchars($search); ?>">
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
                         </div>
                         <div class="col-md-2">
                             <select name="species" class="form-control">
                                 <option value="">Espécie</option>
-                                <option value="Cachorro" <?php if ($species_filter == 'Cachorro') echo 'selected'; ?>>Cachorro</option>
-                                <option value="Gato" <?php if ($species_filter == 'Gato') echo 'selected'; ?>>Gato</option>
+                                <option value="Cachorro" <?php if ($species_filter == 'Cachorro')
+                                    echo 'selected'; ?>>
+                                    Cachorro</option>
+                                <option value="Gato" <?php if ($species_filter == 'Gato')
+                                    echo 'selected'; ?>>Gato
+                                </option>
                             </select>
                         </div>
                         <div class="col-md-2">
+<<<<<<< HEAD
+                            <input type="text" name="breed" class="form-control" placeholder="Raça"
+                                value="<?php echo htmlspecialchars($breed_filter); ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" name="age" class="form-control" placeholder="Idade"
+                                value="<?php echo htmlspecialchars($age_filter); ?>">
+=======
                             <input type="text" name="breed" class="form-control" placeholder="Raça" value="<?php echo htmlspecialchars($breed_filter); ?>">
                         </div>
                         <div class="col-md-2">
                             <input type="number" name="age" class="form-control" placeholder="Idade" value="<?php echo htmlspecialchars($age_filter); ?>">
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
                         </div>
                         <div class="col-md-2">
                             <select name="sex" class="form-control">
                                 <option value="">Sexo</option>
-                                <option value="Macho" <?php if ($sex_filter == 'Macho') echo 'selected'; ?>>Macho</option>
-                                <option value="Fêmea" <?php if ($sex_filter == 'Fêmea') echo 'selected'; ?>>Fêmea</option>
+                                <option value="Macho" <?php if ($sex_filter == 'Macho')
+                                    echo 'selected'; ?>>Macho</option>
+                                <option value="Fêmea" <?php if ($sex_filter == 'Fêmea')
+                                    echo 'selected'; ?>>Fêmea</option>
                             </select>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-12 text-center">
+<<<<<<< HEAD
+                            <label><input type="checkbox" name="favorites" value="1" <?php if ($favorite_filter)
+                                echo 'checked'; ?>> Apenas Favoritos</label>
+=======
                             <label><input type="checkbox" name="favorites" value="1" <?php if ($favorite_filter) echo 'checked'; ?>> Apenas Favoritos</label>
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
                         </div>
                     </div>
                     <div class="row mt-3">
@@ -161,13 +357,27 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                     </div>
                 </form>
             </div>
+<<<<<<< HEAD
+
+=======
             
+>>>>>>> 9b6affaa84d51556afdb244f79d632d685a588d2
             <div class="row justify-content-center">
                 <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         echo '<div class="col-lg-4 col-md-6">';
                         echo '<div class="single_service">';
+
+                        // Adiciona o botão de favorito
+                        echo '<div class="favorite-button">';
+                        // Adiciona a classe 'active' se o animal estiver nos favoritos
+                        echo '<button class="heart-btn' . (in_array($row["id"], $favoritos) ? ' active' : '') . '" data-pet-id="' . $row["id"] . '">';
+                        echo '<i class="fas fa-heart"></i>';
+                        echo '</button>';
+                        echo '</div>';
+
+                        // Renderiza a imagem e informações do animal
                         echo '<div class="service_thumb service_icon_bg_1 d-flex align-items-center justify-content-center">';
                         echo '<div class="service_icon">';
                         echo '<img src="' . htmlspecialchars($row["image"]) . '" alt="">';
@@ -187,6 +397,7 @@ $result = $db->searchAnimals($search, $species_filter, $sex_filter, $breed_filte
                 $db->closeConnection(); // Fechar a conexão
                 ?>
             </div>
+
         </div>
     </div>
 
